@@ -21,8 +21,6 @@ import id.jasoet.pizzapos.domain.Order
 import id.jasoet.pizzapos.domain.Pizza
 import id.jasoet.pizzapos.infra.db.OrderDatabaseServiceImpl
 import id.jasoet.pizzapos.infra.db.PriceDatabaseServiceImpl
-import id.jasoet.pizzapos.service.OrderService
-import id.jasoet.pizzapos.service.PizzaService
 import id.jasoet.pizzapos.value.Cheese
 import id.jasoet.pizzapos.value.LargeCrustSize
 import id.jasoet.pizzapos.value.MediumCrustSize
@@ -42,26 +40,23 @@ object Application {
         val orderDbService = OrderDatabaseServiceImpl()
         val priceDatabaseService = PriceDatabaseServiceImpl()
 
-        val pizzaService: PizzaService = object : PizzaService {}
-        val orderService: OrderService = object : OrderService {}
 
         val pizza1 = Pizza(crustSize = SmallCrustSize, crustType = ThickCrustType)
-        val pizza2 = pizzaService.addTopping(pizza1, Cheese)
-        val pizza3 = pizzaService.addTopping(pizza2, Pepperoni)
-        val pizza4 = pizzaService.updateCrustSize(pizza3, MediumCrustSize)
+        val pizza2 = pizza1.addTopping(Cheese)
+        val pizza3 = pizza2.addTopping(Pepperoni)
+        val pizza4 = pizza3.updateCrustSize(MediumCrustSize)
 
         val bpizza1 = Pizza(crustSize = LargeCrustSize, crustType = ThinCrustType)
-        val bpizza2 = pizzaService.addTopping(bpizza1, Sausage)
-        val bpizza3 = pizzaService.addTopping(bpizza2, Mushrooms)
+        val bpizza2 = bpizza1.addTopping(Sausage)
+        val bpizza3 = bpizza2.addTopping(Mushrooms)
 
         val customer1 = Customer("Jasoet", "009", address = "Yogyakarta")
         val order1 = Order(id = "Some Id", customer = customer1)
-        val order2 = orderService.addPizza(order1, pizza4)
-        val order3 = orderService.addPizza(order2, bpizza3)
+        val order2 = order1.addPizza(pizza4)
+        val order3 = order2.addPizza(bpizza3)
 
-        val totalPrice = orderService
-                .calculatePrice(order3,
-                        pizzaService,
+        val totalPrice = order3
+                .calculatePrice(
                         priceDatabaseService.getToppingPrices(),
                         priceDatabaseService.getCrustTypPrices(),
                         priceDatabaseService.getCrustSizePrices()
