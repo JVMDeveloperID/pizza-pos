@@ -19,15 +19,19 @@ package id.jasoet.pizzapos
 import id.jasoet.pizzapos.domain.Customer
 import id.jasoet.pizzapos.domain.Order
 import id.jasoet.pizzapos.domain.Pizza
+import id.jasoet.pizzapos.infra.db.OrderDatabaseServiceImpl
+import id.jasoet.pizzapos.infra.db.PriceDatabaseServiceImpl
 import id.jasoet.pizzapos.service.OrderService
-import id.jasoet.pizzapos.service.OrderServiceImpl
 import id.jasoet.pizzapos.service.PizzaService
-import id.jasoet.pizzapos.service.PizzaServiceImpl
 import id.jasoet.pizzapos.value.Cheese
+import id.jasoet.pizzapos.value.LargeCrustSize
 import id.jasoet.pizzapos.value.MediumCrustSize
+import id.jasoet.pizzapos.value.Mushrooms
 import id.jasoet.pizzapos.value.Pepperoni
+import id.jasoet.pizzapos.value.Sausage
 import id.jasoet.pizzapos.value.SmallCrustSize
 import id.jasoet.pizzapos.value.ThickCrustType
+import id.jasoet.pizzapos.value.ThinCrustType
 import org.slf4j.LoggerFactory
 
 object Application {
@@ -35,26 +39,36 @@ object Application {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val pizzaService: PizzaService = PizzaServiceImpl()
-        val orderService: OrderService = OrderServiceImpl()
+        val orderDbService = OrderDatabaseServiceImpl()
+        val priceDatabaseService = PriceDatabaseServiceImpl()
+
+        val pizzaService: PizzaService = object : PizzaService {}
+        val orderService: OrderService = object : OrderService {}
 
         val pizza1 = Pizza(crustSize = SmallCrustSize, crustType = ThickCrustType)
-        pizza1.addTopping(Cheese)
-        pizza1.addTopping(Pepperoni)
-        pizza1.crustSize = MediumCrustSize
-        pizza1.getPrice(
-                pizzaService.getToppingPrizes(),
-                pizzaService.getCrustSizePrizes(),
-                pizzaService.getCrustTypePrizes()
-        )
+        val pizza2 = pizzaService.addTopping(pizza1, Cheese)
+        val pizza3 = pizzaService.addTopping(pizza2, Pepperoni)
+        val pizza4 = pizzaService.updateCrustSize(pizza3, MediumCrustSize)
 
-        val order1 = Order()
-        order1.addPizzaToOrder(pizza1)
-        order1.id = "Order1"
-        order1.customer = Customer("Jasoet", "009", address = "Yogyakarta")
+        val bpizza1 = Pizza(crustSize = LargeCrustSize, crustType = ThinCrustType)
+        val bpizza2 = pizzaService.addTopping(bpizza1, Sausage)
+        val bpizza3 = pizzaService.addTopping(bpizza2, Mushrooms)
 
+        val customer1 = Customer("Jasoet", "009", address = "Yogyakarta")
+        val order1 = Order(id = "Some Id", customer = customer1)
+        val order2 = orderService.addPizza(order1, pizza4)
+        val order3 = orderService.addPizza(order2, bpizza3)
 
-        orderService.save(order1)
+        val totalPrice = orderService
+                .calculatePrice(order3,
+                        pizzaService,
+                        priceDatabaseService.getToppingPrices(),
+                        priceDatabaseService.getCrustTypPrices(),
+                        priceDatabaseService.getCrustSizePrices()
+                )
 
+        println("Total Price: $totalPrice")
+
+        orderDbService.save(order3)
     }
 }
